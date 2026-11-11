@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>DJ Mix Studio</title>
+<style>
+  :root{
+    --bg:#08090d; --card:#12151e; --card2:#171b26; --line:rgba(255,255,255,.07);
+    --text:#f2f4f8; --dim:#8b93a5;
+    --a:#22d3ee; --aGlow:rgba(34,211,238,.35);
+    --b:#f472b6; --bGlow:rgba(244,114,182,.35);
+    --rec:#ef4444; --good:#34d399;
+  }
+  body.light{
+    --bg:#eef1f6; --card:#ffffff; --card2:#f4f6fb; --line:rgba(15,23,42,.09);
+    --text:#101527; --dim:#5b6478;
+    --a:#0891b2; --aGlow:rgba(8,145,178,.25);
+    --b:#db2777; --bGlow:rgba(219,39,119,.25);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:-apple-system,'Segoe UI',Roboto,Inter,sans-serif;
+    overflow:hidden; user-select:none;
+  }
+  #app{max-width:480px;height:100dvh;margin:0 auto;display:flex;flex-direction:column;padding:10px 12px 12px;gap:10px;position:relative}
+  body:not(.light) #app::before{
+    content:'';position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(60% 30% at 20% 0%,rgba(34,211,238,.09),transparent 70%),
+               radial-gradient(60% 30% at 80% 100%,rgba(244,114,182,.09),transparent 70%);
+  }
+  header{display:flex;align-items:center;gap:10px;height:46px;flex:none}
+  .logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;letter-spacing:.5px}
+  .logo .bolt{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-size:15px;
+    background:linear-gradient(135deg,var(--a),var(--b));color:#fff;box-shadow:0 2px 12px var(--aGlow)}
+  header .sp{flex:1}
+  .iconbtn{width:36px;height:36px;border-radius:11px;border:1px solid var(--line);background:var(--card);
+    color:var(--text);font-size:16px;display:grid;place-items:center;cursor:pointer}
+  #recBtn{border-color:rgba(239,68,68,.4)}
+  #recBtn.on{animation:pulse 1.2s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5)}50%{box-shadow:0 0 0 7px rgba(239,68,68,0)}}
+  .themeico{width:16px;height:16px;border-radius:50%;display:block;
+    background:linear-gradient(90deg,#fbbf24 50%,transparent 50%);border:2px solid #fbbf24}
+  body.light .themeico{background:linear-gradient(90deg,transparent 50%,#334155 50%);border-color:#334155}
+  .recdot{width:12px;height:12px;border-radius:50%;background:var(--rec);display:block}
+  .deck{flex:1;min-height:0;background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:11px 12px;display:flex;flex-direction:column;gap:9px;position:relative;overflow:hidden}
+  .deck::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent,var(--a))}
+  .deck.b{--accent:var(--b)}
+  .deck .top{display:flex;align-items:center;gap:8px}
+  .deckletter{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font-weight:800;font-size:13px;
+    background:var(--accent);color:#0b0d12}
+  .deck.b .deckletter{color:#fff}
+  .track{flex:1;min-width:0}
+  .track .name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track .sub{font-size:10.5px;color:var(--dim);margin-top:1px}
+  .bpm{font-size:10.5px;font-weight:700;color:var(--dim);border:1px solid var(--line);border-radius:8px;padding:4px 7px;background:var(--card2)}
+  .loadbtn{font-size:11px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:9px;
+    padding:5px 10px;background:transparent;cursor:pointer}
+  .demobtn{font-size:11px;font-weight:700;color:var(--dim);border:1px solid var(--line);border-radius:9px;
+    padding:5px 10px;background:transparent;cursor:pointer}
+  .wavewrap{position:relative;flex:1;min-height:64px;border-radius:12px;background:var(--card2);border:1px solid var(--line);overflow:hidden;cursor:pointer}
+  .wavewrap canvas{width:100%;height:100%;display:block}
+  .wavewrap .playhead{position:absolute;top:0;bottom:0;left:0%;width:2px;background:#fff;box-shadow:0 0 6px #fff;opacity:.9;display:none}
+  .wavewrap .time{position:absolute;right:8px;bottom:5px;font-size:10px;font-weight:600;color:var(--dim);
+    background:rgba(0,0,0,.25);padding:2px 6px;border-radius:6px}
+  body.light .wavewrap .time{background:rgba(255,255,255,.5)}
+  .transport{display:flex;align-items:center;gap:12px}
+  .play{width:58px;height:58px;border-radius:50%;border:none;cursor:pointer;flex:none;
+    background:var(--accent);color:#0b0d12;font-size:22px;display:grid;place-items:center;
+    box-shadow:0 4px 18px var(--aGlow)}
+  .deck.b .play{color:#fff;box-shadow:0 4px 18px var(--bGlow)}
+  .cue{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card2);
+    color:var(--text);font-size:11px;font-weight:800;cursor:pointer;flex:none}
+  .cueloop{display:flex;flex-direction:column;gap:6px;flex:none}
+  .cueloop .cue{width:40px;height:27px;border-radius:9px;font-size:9px}
+  .cue.lit{border-color:var(--good);color:var(--good)}
+  .sliders{flex:1;display:flex;flex-direction:column;gap:7px}
+  .srow{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;color:var(--dim)}
+  .srow .lab{width:44px;letter-spacing:.5px}
+  .srow .val{width:38px;text-align:right;color:var(--text);font-variant-numeric:tabular-nums}
+  input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:4px;
+    background:linear-gradient(90deg,var(--accent) var(--fill,50%),var(--line) var(--fill,50%));outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+    background:#fff;border:3px solid var(--accent);box-shadow:0 1px 6px rgba(0,0,0,.4);cursor:pointer}
+  .eq{display:flex;justify-content:space-around;align-items:center;padding-top:2px}
+  .knob{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .knob .dial{width:42px;height:42px;border-radius:50%;background:var(--card2);border:1px solid var(--line);
+    position:relative;box-shadow:inset 0 2px 6px rgba(0,0,0,.25);cursor:ns-resize;touch-action:none}
+  .knob .dial::after{content:'';position:absolute;left:50%;top:4px;width:3px;height:12px;border-radius:2px;
+    background:var(--accent);transform-origin:50% 17px;transform:translateX(-50%) rotate(var(--rot,0deg))}
+  .knob .klab{font-size:9.5px;font-weight:700;color:var(--dim);letter-spacing:.5px}
+  .mixer{flex:none;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 14px;
+    display:flex;align-items:center;gap:12px}
+  .mixer .knob .dial{width:38px;height:38px}
+  .mixer .knob .dial::after{height:10px;transform-origin:50% 15px}
+  .xfade{flex:1;display:flex;align-items:center;gap:8px}
+  .xfade .side{font-weight:800;font-size:13px}
+  .xfade .side.la{color:var(--a)} .xfade .side.lb{color:var(--b)}
+  #xfader{--accent:#a78bfa}
+  .bottom{flex:none;display:flex;gap:9px}
+  .bigbtn{flex:1;height:48px;border-radius:14px;border:1px solid var(--line);background:var(--card);
+    color:var(--text);font-size:12.5px;font-weight:800;letter-spacing:.4px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:7px}
+  .bigbtn.primary{background:linear-gradient(135deg,var(--a),#818cf8);color:#fff;border:none;
+    box-shadow:0 4px 16px var(--aGlow)}
+  .bigbtn.primary:disabled{opacity:.4;box-shadow:none}
+  .bigbtn.rec{color:var(--rec)}
+  .fxico{display:inline-flex;gap:3px;align-items:center}
+  .fxico i{width:3px;height:14px;border-radius:2px;background:var(--dim);position:relative;display:block}
+  .fxico i:nth-child(1){height:10px}.fxico i:nth-child(2){height:16px;background:var(--text)}
+  .bigbtn.lit{border-color:var(--good);color:var(--good)}
+  #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--card);color:var(--text);
+    border:1px solid var(--line);border-radius:12px;padding:10px 16px;font-size:12.5px;font-weight:600;
+    opacity:0;transition:opacity .25s;pointer-events:none;max-width:88%;text-align:center;z-index:50}
+  #toast.show{opacity:1}
+  #selftest{display:none;position:fixed;inset:0;background:#000;color:#0f0;font:12px monospace;padding:20px;z-index:99;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo"><span class="bolt">⚡</span>DJ MIX STUDIO</div>
+    <div class="sp"></div>
+    <button class="iconbtn" id="themeBtn" title="Theme"><span class="themeico"></span></button>
+    <button class="iconbtn" id="recBtn" title="Record mix"><span class="recdot"></span></button>
+  </header>
+
+  <section class="deck a" id="deckA">
+    <div class="top">
+      <div class="deckletter" style="background:var(--a)">A</div>
+      <div class="track">
+        <div class="name" data-name="a">No track loaded</div>
+        <div class="sub" data-sub="a">Load a song or tap DEMO</div>
+      </div>
+      <div class="bpm" data-bpm="a" style="display:none"></div>
+      <button class="demobtn" data-demo="a">DEMO</button>
+      <button class="loadbtn" style="color:var(--a);border-color:var(--a)" data-load="a">LOAD</button>
+    </div>
+    <div class="wavewrap" data-wave="a">
+      <canvas data-canvas="a"></canvas>
+      <div class="playhead" data-ph="a"></div>
+      <div class="time" data-time="a">--:-- / --:--</div>
+    </div>
+    <div class="transport">
+      <div class="cueloop">
+        <button class="cue" style="color:var(--a)" data-cue="a">CUE</button>
+        <button class="cue" style="color:var(--a)" data-loop="a">LOOP</button>
+      </div>
+      <button class="play" style="background:var(--a)" data-play="a">▶</button>
+      <div class="sliders">
+        <div class="srow"><span class="lab">TEMPO</span><input type="range" min="0" max="100" value="50" data-slider="tempo" data-deck="a" style="--accent:var(--a);--fill:50%"><span class="val" data-tempoval="a">0.0%</span></div>
+        <div class="srow"><span class="lab">VOLUME</span><input type="range" min="0" max="100" value="80" data-slider="volume" data-deck="a" style="--accent:var(--a);--fill:80%"><span class="val" data-volval="a">80</span></div>
+      </div>
+    </div>
+    <div class="eq">
+      <div class="knob"><div class="dial" data-knob="hi" data-deck="a" style="--accent:var(--a)"></div><span class="klab">HIGH</span></div>
+      <div class="knob"><div class="dial" data-knob="mid" data-deck="a" style="--accent:var(--a)"></div><span class="klab">MID</span></div>
+      <div class="knob"><div class="dial" data-knob="low" data-deck="a" style="--accent:var(--a)"></div><span class="klab">LOW</span></div>
+      <div class="knob"><div class="dial" data-knob="filter" data-deck="a" style="--accent:var(--a)"></div><span class="klab">FILTER</span></div>
+    </div>
+  </section>
+
+  <section class="mixer">
+    <div class="knob"><div class="dial" data-knob="echo" style="--accent:#a78bfa"></div><span class="klab">ECHO</span></div>
+    <div class="xfade">
+      <span class="side la">A</span>
+      <input type="range" id="xfader" min="0" max="100" value="50" style="--fill:50%">
+      <span class="side lb">B</span>
+    </div>
+    <div class="knob"><div class="dial" data-knob="master" style="--accent:#a78bfa"></div><span class="klab">MASTER</span></div>
+  </section>
+
+  <section class="deck b" id="deckB">
+    <div class="top">
+      <div class="deckletter" style="background:var(--b)">B</div>
+      <div class="track">
+        <div class="name" data-name="b">No track loaded</div>
+        <div class="sub" data-sub="b">Load a song or tap DEMO</div>
+      </div>
+      <div class="bpm" data-bpm="b" style="display:none"></div>
+      <button class="demobtn" data-demo="b">DEMO</button>
+      <button class="loadbtn" style="color:var(--b);border-color:var(--b)" data-load="b">LOAD</button>
+    </div>
+    <div class="wavewrap" data-wave="b">
+      <canvas data-canvas="b"></canvas>
+      <div class="playhead" data-ph="b"></div>
+      <div class="time" data-time="b">--:-- / --:--</div>
+    </div>
+    <div class="transport">
+      <div class="cueloop">
+        <button class="cue" style="color:var(--b)" data-cue="b">CUE</button>
+        <button class="cue" style="color:var(--b)" data-loop="b">LOOP</button>
+      </div>
+      <button class="play" style="background:var(--b)" data-play="b">▶</button>
+      <div class="sliders">
+        <div class="srow"><span class="lab">TEMPO</span><input type="range" min="0" max="100" value="50" data-slider="tempo" data-deck="b" style="--accent:var(--b);--fill:50%"><span class="val" data-tempoval="b">0.0%</span></div>
+        <div class="srow"><span class="lab">VOLUME</span><input type="range" min="0" max="100" value="65" data-slider="volume" data-deck="b" style="--accent:var(--b);--fill:65%"><span class="val" data-volval="b">65</span></div>
+      </div>
+    </div>
+    <div class="eq">
+      <div class="knob"><div class="dial" data-knob="hi" data-deck="b" style="--accent:var(--b)"></div><span class="klab">HIGH</span></div>
+      <div class="knob"><div class="dial" data-knob="mid" data-deck="b" style="--accent:var(--b)"></div><span class="klab">MID</span></div>
+      <div class="knob"><div class="dial" data-knob="low" data-deck="b" style="--accent:var(--b)"></div><span class="klab">LOW</span></div>
+      <div class="knob"><div class="dial" data-knob="filter" data-deck="b" style="--accent:var(--b)"></div><span class="klab">FILTER</span></div>
+    </div>
+  </section>
+
+  <div class="bottom">
+    <button class="bigbtn rec" id="recBtnBig">⏺ RECORD</button>
+    <button class="bigbtn primary" id="exportBtn" disabled>⬇ EXPORT MIX</button>
+    <button class="bigbtn" id="fxBtn"><span class="fxico"><i></i><i></i><i></i></span> FX</button>
+  </div>
+</div>
+
+<input type="file" id="fileA" accept="audio/*" style="display:none">
+<input type="file" id="fileB" accept="audio/*" style="display:none">
+<div id="toast"></div>
+<div id="selftest"></div>
+
+<script src="lame.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
