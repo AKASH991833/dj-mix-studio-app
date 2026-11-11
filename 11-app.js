@@ -207,7 +207,7 @@
     recNode = new AudioWorkletNode(ctx, "recorder-processor");
     recZero = ctx.createGain();
     recZero.gain.value = 0;
-    master.connect(recNode);
+    comp.connect(recNode);
     recNode.connect(recZero);
     recZero.connect(ctx.destination);
     recNode.port.onmessage = (e) => Recorder.onChunk(e.data);
@@ -279,6 +279,8 @@
       this.offset = 0;
       this.playing = false;
       this.name = name;
+      this.loopOn = false;
+      this.bpm = estimateBPM(buf);
       this.peaks = computePeaks(buf, 800);
       updateDeckUI(this);
     }
@@ -341,11 +343,12 @@
     }
     toggleLoop() {
       if (!this.buffer) return;
+      const current = this.pos();
       if (!this.loopOn) {
         const beats = 4;
         const bpm = this.bpm || 120;
         const len = beats * 60 / bpm;
-        this.loopStart = this.pos();
+        this.loopStart = current;
         if (this.loopStart + len > this.buffer.duration) this.loopStart = Math.max(0, this.buffer.duration - len);
         this.loopEnd = this.loopStart + len;
         this.loopOn = true;
@@ -353,9 +356,8 @@
         this.loopOn = false;
       }
       if (this.playing) {
-        const p = this.pos();
         this.stopSource();
-        this.offset = p;
+        this.offset = current;
         this.playing = false;
         this.play();
       }
@@ -510,7 +512,6 @@
     for (let b = 0; b < beats; b++) {
       const t = b * spb;
       kick(t);
-      if (variant === "a" || b % 2 === 1) kick(t + spb * 0.5 * (variant === "a" ? 0 : 0));
       hat(t + spb * 0.5, b % 4 === 3);
       if (variant === "b" && b % 2 === 1) hat(t + spb * 0.25, false);
       bass(t, scale[b % 8], spb * 0.9);
@@ -622,13 +623,13 @@
   }
   function downloadBlob(blob) {
     const ext = blob.type === "audio/mpeg" ? "mp3" : "wav";
-    const name = "dj-mix-" + (/* @__PURE__ */ new Date()).toISOString().slice(11, 19).replace(/:/g, "") + "." + ext;
+    const name = "dj-mix-" + (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-") + "." + ext;
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = name;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 5e3);
-    toast("Mix saved: " + name);
+    toast("Download started: " + name);
   }
   function updateDeckUI(deck) {
     const id = deck.id;
@@ -636,8 +637,7 @@
     $(`[data-sub="${id}"]`).textContent = deck.buffer ? fmt(deck.buffer.duration) + " \u2022 ready" : "Load a song or tap DEMO";
     $(`[data-play="${id}"]`).textContent = deck.playing ? "\u23F8" : "\u25B6";
     if (deck.buffer) {
-      const bpm = estimateBPM(deck.buffer);
-      deck.bpm = bpm;
+      const bpm = deck.bpm;
       const badge = $(`[data-bpm="${id}"]`);
       if (bpm) {
         badge.textContent = "~" + bpm + " BPM";
