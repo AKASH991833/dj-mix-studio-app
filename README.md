@@ -1,3 +1,21 @@
+## Current repair preview: 0.4
+
+[Android APK and exact source/test archive](https://github.com/AKASH991833/dj-mix-studio-app/releases/tag/v0.4-repair-preview)
+
+This is a repair preview, **not Android-device-tested or live-gig ready**. It fixes library paging beyond 100 entries, overlapping same-deck loads, export state after a refused new recording, and phone access to both decks through persistent play/pause and crossfader controls. The full console still scrolls; this is not compact VirtualDJ parity. Native picker handling now owns pause policy, but the real Android picker/import/grants/local URI playback/Save As still need device testing.
+
+Exact Android source, tests, synthesized fixture and screenshots are in the release asset `dj-repair-source-0.4.zip`, not GitHub's automatically generated Source code archives, which reflect the older website snapshot used by the tag. Older releases are unchanged.
+
+Browser screenshots, not Android screenshots:
+
+![Phone landscape](4-quick-landscape-viewport.png)
+
+![Phone portrait](5-quick-portrait-viewport.png)
+
+[Open the 0.4 browser sample](https://akash991833.github.io/dj-mix-studio-app/3-repair-preview.html). Still limited to 50 MB / 15 min per loaded track with whole-track memory decoding. No YouTube mixing, headphone cue output, stems or controller support.
+
+---
+
 # DJ Mix Studio
 
 Free 2-deck DJ mixing app that runs in the browser (Android-first, installable as an APK wrapper later). Load your own songs, mix them live, and export the remix as an MP3 - no account, no server, no paid plan. Everything runs on the device.
